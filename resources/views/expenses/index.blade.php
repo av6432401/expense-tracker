@@ -42,7 +42,7 @@
                                 @foreach($categorySummary as $category => $amount)
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         {{ $category }}
-                                        <span class="badge badge-dark">₹{{ number_format($amount, 2) }}</span>
+                                        <span class="badge badge-dark" style="color:black">₹{{ number_format($amount, 2) }}</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -188,5 +188,46 @@
         }
     });
 </script>
+<script>
+document.getElementById('dateSelect').addEventListener('change', function () {
+    const date = this.value;
+    const totalDiv = document.getElementById('daywiseTotal');
+    const listDiv  = document.getElementById('daywiseExpenses');
+
+    if (!date) {
+        totalDiv.innerHTML = '';
+        listDiv.innerHTML  = '';
+        return;
+    }
+
+    fetch(`/expenses/daywise/${date}`)
+      .then(res => res.json())
+      .then(data => {
+        // show total
+        totalDiv.innerHTML = `<h6>Total on ${new Date(date).toLocaleDateString('en-GB')}: ₹${data.totalAmount.toFixed(2)}</h6>`;
+        
+        // render each expense
+        if (data.expenses.length) {
+          let html = '<ul class="list-group">';
+          data.expenses.forEach(exp => {
+            html += `
+              <li class="list-group-item d-flex justify-content-between">
+                ${exp.description}
+                <span>₹${parseFloat(exp.amount).toFixed(2)}</span>
+              </li>`;
+          });
+          html += '</ul>';
+          listDiv.innerHTML = html;
+        } else {
+          listDiv.innerHTML = '<p>No expenses for this day.</p>';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        totalDiv.innerHTML = '<p class="text-danger">Could not load data.</p>';
+      });
+});
+</script>
+
 
 @endsection
